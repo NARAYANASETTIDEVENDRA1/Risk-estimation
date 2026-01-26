@@ -1,0 +1,37 @@
+Asset list : 
+                      if two assets are used then I am using sbi and Infosys 
+                      if 4 assets are used then I am using sbi Infosys HUL tata motors
+
+horizon and step size    :  data from 2011-04-26 to 2025-04-26 is considered . returns data in log*100 form is being used . Window 1 uses data [0,…,999] and predicts var on 1000th day and again based on step size one or ten window moves by step size and model is refitted on this data and  var is predicted for the next day . 
+
+distribution assumptions: 
+                                r=μ+ε    ,μ=c​+ϕ*​r
+                                ε=σ*z
+                                σ^2​=ωi+α*ε​^2+γ*ε^2{ε<0}+β*​σ^2​   
+                                 t distribution assumption is taken for model and gaussian distribution assumption is taken for baseline.
+
+EVT threshold selection rules  :  no of exceedences should be atleast 100 and ks p value , ad p value should be greater than 0.05 when gpd is fitted on lower and upper tails . 
+
+tail fallback rule  :  whenver tails does not meet above criteria , we have done in two ways :
+                      one way we have condisered kde on both centre and tail portion 
+                      second way we have considered kde at centre and GJR Garch distribution for tails 
+
+copula family selection rule and bootstrap settings  :   considered Student-t vine,BB7 vine
+
+         Selection criteria :
+                     a)Rosenblatt CvM GoF test   Accept if  p>0.05  , GoF bootstrap: 𝐵 GoF=1000 
+                     b) Tail dependence consistency
+
+                              Empirical  λ must lie within model bootstrap CI     ∣ 𝜆 model − 𝜆 emp∣≤0.05   Tail dependence bootstrap: 1000
+                     c) smaller absolute ES error
+
+simulation draws per forecast day  : Paths per forecast: N=10,000   Forecast days: =1 
+
+Random seeds  :  I have not kept any seed in code so while rerunning it may give different results but closer  . 
+
+Run time :  rough time taken  for running remotely accessed  Linux machine for which access is given  .  
+     step size 1 and 2 assets : 15 hrs 
+     step size 1 and 4 assets  : 2 days  
+     step size 10 and 2 assets : 4 hr 30 mins      step size 10 and 4 assets : 10 hours 
+
+

@@ -1,0 +1,57 @@
+Asset list : 
+                              If two assets are used, then I am using SBI and Infosys 
+                              If 4 assets are used, then I am using SBI, Infosys, HUL, and Tata Motors
+
+
+horizon and step size    :  
+                            data from 2011-04-26 to 2025-04-26 is considered . Returns data in log*100 form are being used. The window size is 1000  
+
+           case 1: horizon 1 and step size 1
+           case 2: horizon 1 and step size 10 
+           case 3: horizon 10 and step size 1 
+           case 4: horizon 10 and step size 10 
+                       Window 1 uses data from [0,…,999] days and predicts var (a single value on the next horizon days (1 or 10 days), cumulative). Then, based on the step size (1 or 10), the window moves by step size, and the model is refitted on this data, and var is predicted.  
+
+
+distribution assumptions: 
+                                r=μ+ε    ,μ=c​+ϕ*​r
+                                ε=σ*z
+                                σ^2​=ωi + α*ε​^2 + γ*ε^2{ε<0} + β*​σ^2​   
+                                 The t-distribution assumption is taken for the model, and the Gaussian distribution assumption is taken for the baseline.
+
+
+EVT threshold selection rules  :  
+                                 no of exceedences should be at least 100 and ks p value, ad p value should be greater than 0.05 when gpd is fitted on lower and upper tails, and also shape paremeter of gpd fiited model should be greater than 0 . this process is automated such that model will select 50 points in 80 to 99.5 percent portion in both lower and upper tails and finally the point satisfying above conditions will be taken as threshold.  If there are many points satisfying conditions, then one with more exceedences will be considered 
+                 Whenever no threshold meet the above criteria, we have considered two cases : 
+                           1) kde on both centre and tail portion(for which no threshold passes) 
+                           2) for the tail where no threshold passes, then we will use GJR GARCH implied tails for tails and KDE for centre, for this threshold, I will use: 
+          If there is any point that passes all tests but exceedences are less than 100, then the point with the maximum exceedances will be selected, or if there is no point passing(KS test, AD test, scale of GPD), then the point with the maximum exceedances in the 80 to 99.5 per cent portion will be selected    
+
+
+copula family selection rule   :   
+                                 considered Student-t vine, BB7 vine and the Selection criteria are:
+                     
+                      a)Rosenblatt CVM GoF test: Accept if  p>0.05   
+                                 
+                      b) Tail dependence consistency
+
+                                           The empirical λ lower tail must lie within the model bootstrap confidence interval, 
+                     ∣ 𝜆 model − 𝜆 emp∣≤0.05
+   
+                     c) If both a  and b are equal for both copulas, then  I  have used FZ0 loss. for each rolling window, whenever we are calculating it for the present window we need realized loss but we don't have it in practical while predicting, so what i have done is i have stored out that loss for previous windows and i have used mean values of those to compare bb7 and t copula but i have used those means if i had already more than 20 values otherwise i used AIC for those windows.  
+
+
+simulation bootstrap seeds   : 
+                 I have taken global seed as 42 at the starting point, and for every rolling window, I made the seed for that window to be global seed plus that window index, which will be passed for calculations related to that window. In the Acerbi–Székely test for null hypothesis(es model correctly specified) we create 10000 datasets with rng(numbers generator) in python which uses global seed 42, each supporting null hypothesis as per theory .in threshold selection to calcualte ad p value for that gpd fit, we have generated dataset from gpd fit for bootstrap size of 300 times using rng with window seed.  In the Rosenblatt Gof test, the vine copula simulates 10000 values 1000 times, and each time the seed is updated by 1. For the model lambda tail dependence, 500 values are simulated from the vine model 1000 times and each time the seed is updated by 1. 
+               For horizon 1         : we have to forecast for 1 day. I have simulated 10000 paths using the vine copula and calculated VaR and ES based on these.    
+               For horizon 10   :         Here, we have to forecast Var and ES for the next 10 days cumulative, so I have created 10000 paths(residuals) for day 1, and using these residuals, I have calculated returns for day 1(10000 returns) . Using this, I have modified sigma and mu for the next day and used the new mu, sigma with another 10000 paths simulated to get new returns, and continued this process till the last day. Then, I have added all these returns for 10 days to get 10000 (10-day returns cumulative) values. Here, for every 10000 simulations, I have updated the window seed with 1.        
+
+
+Refit cadence :
+                  In every rolling window, the Ar-GJR Garch is refitted, the threshold is selected again, the pit values are constructed again, Var and ES are calculated for both copulas, BB7 and Student, and also Rosenblatt GOF, empirical tail dependence, model tail dependence  and FZ0 loss are calculated, and Gaussian baseline Var and ES are calculated   
+
+Evaluation Cadence  : 
+                          During evaluation, we have around 250(var and Es)  sample points for step size 10 and 2473 points for step size 1. We use these to do Kupeic, Christopherson independence, DQ with lags 1 and 4, Ascerby test, and FZ0 loss. 
+
+  
+                                     
